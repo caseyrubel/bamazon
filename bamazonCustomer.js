@@ -10,16 +10,15 @@ var connection = mysql.createConnection({
     password: "",
     database: "bamazon"
 });
-// connect to the mysql server and sql database
 connection.connect(function(err) {
     if (err) throw err;
-    // run the start function after the connection is made to prompt the user
     start();
 });
 
 
 
 function start() {
+
     inquirer
         .prompt({
             name: "product",
@@ -27,7 +26,6 @@ function start() {
             message: "What product would you like to buy?"
         })
         .then(function(answer) {
-            // based on their answer, either call the bid or the post functions
             if (answer.product.toUpperCase() === "SUNS JERSEY") {
                 changeProduct(answer.product);
             } else if (answer.product.toUpperCase() === "RAPTORS JERSEY") {
@@ -47,16 +45,23 @@ function start() {
 function changeProduct(par) {
     connection.query(
         "UPDATE products SET ? WHERE ?", [{
-                stock_quantity: 9;
+                stock_quantity: (stock_quantity - 1)
             },
             {
-                product_name: par;
+                product_name: par
             }
         ],
         function(err, res) {
             console.log(res.affectedRows + " products updated!\n");
-            // Call deleteCrud AFTER the UPDATE completes
-            deleteCrud();
         }
     );
+}
+
+
+function show() {
+    console.log("Selecting all products...\n");
+    connection.query("SELECT * FROM products", function(err, res) {
+        if (err) throw err;
+        console.log(res);
+    });
 }
