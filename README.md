@@ -36,7 +36,7 @@ Casey Rubel [GitHub](https://github.com/caseyrubel)
 * MySQL
 * npm packages:
 	- [mysql](https://github.com/felixge/node-mysql)
-	- [inquirer](https://github.com/flatiron/prompt)
+	- [inquirer](https://github.com/SBoudrias/Inquirer.js/)
 	- [colors/safe](https://github.com/Marak/colors.js)
 	- [cli-table](https://github.com/Automattic/cli-table)
 
