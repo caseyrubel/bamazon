@@ -1,5 +1,7 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var Table = require('cli-table');
+var colors = require('colors/safe');
 // create the connection information for the sql database
 var connection = mysql.createConnection({
     host: "localhost",
@@ -18,50 +20,61 @@ connection.connect(function(err) {
 
 
 function start() {
+    connection.query('SELECT item_id, product_name, price From products', function(err, result) {
+        if (err) console.log(err);
 
-    inquirer
-        .prompt({
-            name: "product",
-            type: "input",
-            message: "What product would you like to buy?"
+        var table = new Table({
+            head: ['Item Id#', 'Product Name', 'Price'],
+            style: {
+                head: ['red'],
+                compact: false,
+                colAligns: ['center']
+            }
         })
-        .then(function(answer) {
-            if (answer.product.toUpperCase() === "SUNS JERSEY") {
-                changeProduct(answer.product);
-            } else if (answer.product.toUpperCase() === "RAPTORS JERSEY") {
-                changeProduct(answer.product);
-            } else if (answer.product.toUpperCase() === "WARRIORS JERSEY") {
-                changeProduct(answer.product);
-            } else if (answer.product.toUpperCase() === "LAKERS JERSEY") {
-                changeProduct(answer.product);
-            } else if (answer.product.toUpperCase() === "KINGS JERSEY") {
-                changeProduct(answer.product);
-            } else if (answer.product.toUpperCase() === "POST") {
-                changeProduct(answer.product);
-            }
-        });
-}
-
-function changeProduct(par) {
-    connection.query(
-        "UPDATE products SET ? WHERE ?", [{
-                stock_quantity: (stock_quantity - 1)
-            },
-            {
-                product_name: par
-            }
-        ],
-        function(err, res) {
-            console.log(res.affectedRows + " products updated!\n");
+        for (var i = 0; i < result.length; i++) {
+            table.push(
+                [result[i].item_id, result[i].product_name, result[i].price]
+            );
         }
-    );
+        console.log(table.toString());
+
+        productChange();
+    });
 }
 
+function productChange() {
+    inquirer
+        .prompt([{
+            name: "item",
+            type: "input",
+            message: "What is the id of the item you would like to purchase?"
+        }, {
+            name: "quantity",
+            type: "input",
+            message: "How many would you like?"
+        }])
+        .then(function(answer) {
+            connection.query(
+                'SELECT * FROM Products WHERE item_id=?', answer.item,
+                function(err, res) {
+                    if (err) throw err;
+                    if (res[0].stock_quantity <= answer.quantity) {
+                        console.log("We're sorry, there are only " + res[0].stock_quantity + " left in stock")
+                        start();
+                    } else {
+                        var number = (res[0].stock_quantity - answer.quantity);
+                        var cost = (res[0].price * answer.quantity);
+                        connection.query('UPDATE Products SET stock_quantity=? WHERE item_id=?', [number, answer.item], function(err, results) {
+                            if (err) throw err;
+                            console.log(answer.quantity + " items purchased")
+                            console.log(res[0].product_name + " " + res[0].price + "$")
+                            console.log("Total Cost will be " + cost + "$")
+                            console.log("Your transaction has been processed!")
+                            start();
+                        })
 
-function show() {
-    console.log("Selecting all products...\n");
-    connection.query("SELECT * FROM products", function(err, res) {
-        if (err) throw err;
-        console.log(res);
-    });
+                    }
+                }
+            );
+        });
 }
